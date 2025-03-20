@@ -1,4 +1,3 @@
-# pages/2_📊_Data_Analysis.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -14,9 +13,9 @@ def load_data():
 
 @st.cache_data
 def preprocess_data(df):
-    # Encoding and feature engineering
     qual_dict = {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1}
-    functional_map = {'Typ': 7, 'Min1': 6, 'Min2': 5, 'Mod': 4, 'Maj1': 3, 'Maj2': 2, 'Sev': 1, 'Sal': 0}
+    functional_map = {'Typ': 7, 'Min1': 6, 'Min2': 5, 'Mod': 4, 
+                     'Maj1': 3, 'Maj2': 2, 'Sev': 1, 'Sal': 0}
     
     data = df.copy()
     data['Exter Qual'] = data['Exter Qual'].map(qual_dict)
@@ -58,28 +57,46 @@ def main():
             fig.add_vline(x=df[var].mean(), line_dash="dash", line_color="red")
             st.plotly_chart(fig, use_container_width=True)
         
-        # Categorical Analysis
+        # Categorical Analysis (Fixed Section)
         st.header("Categorical Variables")
         cat_cols = ['Neighborhood', 'Exter Qual', 'Kitchen Qual',
                    'Functional', 'Sale Type', 'Sale Condition']
         
         cat_var = st.selectbox("Select Categorical Variable", cat_cols)
+        
+        # Fix 1: Proper column naming for value counts
         counts = df[cat_var].value_counts().reset_index()
-        fig = px.bar(counts, x='index', y=cat_var, title=f"Distribution of {cat_var}")
+        counts.columns = ['Category', 'Count']  # Explicit column names
+        
+        fig = px.bar(counts, 
+                    x='Category', 
+                    y='Count', 
+                    title=f"Distribution of {cat_var}")
         st.plotly_chart(fig, use_container_width=True)
         
-        # Bivariate Analysis
+        # Bivariate Analysis (Fixed Section)
         st.header("Bivariate Analysis")
         col1, col2 = st.columns(2)
         
         with col1:
-            feat = st.selectbox("Select Feature", [c for c in num_cols if c != 'SalePrice'])
-            fig = px.scatter(df, x=feat, y='SalePrice', trendline="lowess")
+            # Fix 2: Separate selectors for numerical and categorical features
+            num_feat = st.selectbox("Select Numerical Feature", 
+                                   [c for c in num_cols if c != 'SalePrice'])
+            fig = px.scatter(df, 
+                            x=num_feat, 
+                            y='SalePrice', 
+                            trendline="lowess",
+                            title=f"SalePrice vs {num_feat}")
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
+            # Fix 3: Separate selector for categorical features
             cat_feat = st.selectbox("Select Categorical Feature", cat_cols)
-            fig = px.violin(df, x=cat_feat, y='SalePrice', box=True)
+            fig = px.violin(df, 
+                           x=cat_feat, 
+                           y='SalePrice', 
+                           box=True,
+                           title=f"SalePrice by {cat_feat}")
             st.plotly_chart(fig, use_container_width=True)
             
     except Exception as e:
