@@ -96,6 +96,9 @@ def main():
             
             def predict(self, X):
                 return self.model.predict(self.scaler.transform(X))
+
+            def fit(self, X, y=None):
+                return self
         
         with st.spinner("Calculating permutation importance..."):
             results = permutation_importance(
