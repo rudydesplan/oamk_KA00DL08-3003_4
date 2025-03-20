@@ -5,10 +5,14 @@ import numpy as np
 import plotly.express as px
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, Dropout
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import Huber
+from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.preprocessing import StandardScaler
 from sklearn.inspection import permutation_importance
+from sklearn.metrics import mean_squared_error, r2_score
 from pages.p2_Data_Analysis import load_data, preprocess_data
 
 class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
