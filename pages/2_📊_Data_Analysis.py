@@ -39,13 +39,24 @@ def main():
         df = load_data()
         X_train, X_test, y_train, y_test, processed_data = preprocess_data(df)
         
-        # Numerical Analysis
-        st.header("Numerical Variables")
+        # --------------------------
+        # 1. Numerical Descriptive Stats
+        # --------------------------
+        st.header("Numerical Descriptive Statistics")
         num_cols = ['Overall Qual', 'Overall Cond', 'Mas Vnr Area', 'Total Bsmt SF',
                    '1st Flr SF', 'Gr Liv Area', 'Bsmt Full Bath', 'Bedroom AbvGr',
                    'Kitchen AbvGr', 'TotRms AbvGrd', 'Garage Cars', 'Garage Area',
                    'SalePrice', 'House Age']
         
+        numeric_descriptive_stats = df[num_cols].describe().T
+        st.dataframe(numeric_descriptive_stats.style.format("{:.2f}"), 
+                    height=600,
+                    use_container_width=True)
+        
+        # --------------------------
+        # Numerical Analysis
+        # --------------------------
+        st.header("Numerical Variables Analysis")
         col1, col2 = st.columns(2)
         with col1:
             var = st.selectbox("Select Numerical Variable", num_cols)
@@ -57,29 +68,58 @@ def main():
             fig.add_vline(x=df[var].mean(), line_dash="dash", line_color="red")
             st.plotly_chart(fig, use_container_width=True)
         
-        # Categorical Analysis (Fixed Section)
-        st.header("Categorical Variables")
+        # --------------------------
+        # 2. Categorical Descriptive Stats
+        # --------------------------
+        st.header("Categorical Descriptive Statistics")
         cat_cols = ['Neighborhood', 'Exter Qual', 'Kitchen Qual',
                    'Functional', 'Sale Type', 'Sale Condition']
         
+        non_numeric_stats = df[cat_cols].describe().T
+        st.dataframe(non_numeric_stats, 
+                    height=400,
+                    use_container_width=True)
+        
+        # --------------------------
+        # Categorical Analysis
+        # --------------------------
+        st.header("Categorical Variables Analysis")
         cat_var = st.selectbox("Select Categorical Variable", cat_cols)
         
-        # Fix 1: Proper column naming for value counts
+        # Get value counts with proper column names
         counts = df[cat_var].value_counts().reset_index()
-        counts.columns = ['Category', 'Count']  # Explicit column names
+        counts.columns = ['Category', 'Count']
         
-        fig = px.bar(counts, 
-                    x='Category', 
-                    y='Count', 
-                    title=f"Distribution of {cat_var}")
-        st.plotly_chart(fig, use_container_width=True)
+        # Create two columns for side-by-side charts
+        col_chart1, col_chart2 = st.columns(2)
         
-        # Bivariate Analysis (Fixed Section)
+        with col_chart1:
+            # Bar plot
+            fig_bar = px.bar(counts, 
+                            x='Category', 
+                            y='Count', 
+                            title=f"Distribution of {cat_var}")
+            st.plotly_chart(fig_bar, use_container_width=True)
+        
+        with col_chart2:
+            # --------------------------
+            # 3. Pie Chart Addition
+            # --------------------------
+            fig_pie = px.pie(counts,
+                            names='Category',
+                            values='Count',
+                            title=f"Proportion of {cat_var}",
+                            hole=0.3)
+            fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+            st.plotly_chart(fig_pie, use_container_width=True)
+        
+        # --------------------------
+        # Bivariate Analysis
+        # --------------------------
         st.header("Bivariate Analysis")
         col1, col2 = st.columns(2)
         
         with col1:
-            # Fix 2: Separate selectors for numerical and categorical features
             num_feat = st.selectbox("Select Numerical Feature", 
                                    [c for c in num_cols if c != 'SalePrice'])
             fig = px.scatter(df, 
@@ -90,7 +130,6 @@ def main():
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
-            # Fix 3: Separate selector for categorical features
             cat_feat = st.selectbox("Select Categorical Feature", cat_cols)
             fig = px.violin(df, 
                            x=cat_feat, 
