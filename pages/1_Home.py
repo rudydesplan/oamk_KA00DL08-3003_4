@@ -1,4 +1,4 @@
-# pages/1_🏠_Home.py
+# pages/1_Home.py
 import streamlit as st
 
 def main():
