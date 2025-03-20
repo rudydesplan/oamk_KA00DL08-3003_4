@@ -8,6 +8,7 @@ from tensorflow.keras.layers import Input, Dense, BatchNormalization, Dropout
 from tensorflow.keras.models import Model
 from sklearn.preprocessing import StandardScaler
 from sklearn.inspection import permutation_importance
+from sklearn.metrics import mean_squared_error, r2_score
 from pages.p2_Data_Analysis import load_data, preprocess_data
 
 @st.cache_resource
