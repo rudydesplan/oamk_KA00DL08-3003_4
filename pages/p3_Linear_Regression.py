@@ -6,7 +6,7 @@ import statsmodels.api as sm
 import plotly.express as px
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-from pages.2_Data_Analysis import load_data, preprocess_data
+from pages.p2_Data_Analysis import load_data, preprocess_data
 
 @st.cache_resource
 def train_linear_model(_X_train, _y_train):
