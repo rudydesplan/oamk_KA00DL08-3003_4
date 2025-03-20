@@ -93,6 +93,9 @@ def main():
         y_pred = model.predict(X_test)
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         r2 = r2_score(y_test, y_pred)
+
+        st.session_state['nn_rmse'] = rmse
+        st.session_state['nn_r2'] = r2
         
         col1, col2 = st.columns(2)
         with col1:
