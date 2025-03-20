@@ -6,10 +6,24 @@ import plotly.express as px
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, Dropout
 from tensorflow.keras.models import Model
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.preprocessing import StandardScaler
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import mean_squared_error, r2_score
 from pages.p2_Data_Analysis import load_data, preprocess_data
+
+class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
+    """Wrapper class to make Keras models compatible with scikit-learn"""
+    def __init__(self, model, scaler):
+        self.model = model
+        self.scaler = scaler
+        
+    def fit(self, X, y):
+        """Dummy fit method to satisfy sklearn interface"""
+        return self  # Model is already trained
+    
+    def predict(self, X):
+        """Make predictions using the scaled input"""
+        return self.model.predict(self.scaler.transform(X)).flatten()
 
 @st.cache_resource
 def train_nn_model(_X_train, _y_train):
@@ -54,7 +68,7 @@ def train_nn_model(_X_train, _y_train):
         verbose=0
     )
     
-    return model, scaler
+    return KerasRegressorWrapper(model, scaler)  # Return wrapped model
 
 def calculate_optimal_delta(y):
     q25, q75 = np.percentile(y, [25, 75])
@@ -68,14 +82,11 @@ def main():
         df = load_data()
         X_train, X_test, y_train, y_test, processed_data = preprocess_data(df)
         
-        # Train model with scaler
-        model, scaler = train_nn_model(X_train, y_train)
-        
-        # Scale test data
-        X_test_scaled = scaler.transform(X_test)
+        # Train model
+        model = train_nn_model(X_train, y_train)
         
         # Metrics
-        y_pred = model.predict(X_test_scaled).flatten()
+        y_pred = model.predict(X_test)
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         r2 = r2_score(y_test, y_pred)
         
@@ -87,22 +98,9 @@ def main():
         
         # Permutation importance
         st.subheader("Feature Importance (Permutation)")
-        
-        # Create wrapper for model with scaler
-        class ScaledModel:
-            def __init__(self, model, scaler):
-                self.model = model
-                self.scaler = scaler
-            
-            def predict(self, X):
-                return self.model.predict(self.scaler.transform(X))
-
-            def fit(self, X, y=None):
-                return self
-        
         with st.spinner("Calculating permutation importance..."):
             results = permutation_importance(
-                ScaledModel(model, scaler),
+                model,
                 X_test,
                 y_test,
                 n_repeats=5,
@@ -121,9 +119,9 @@ def main():
         
         st.markdown("""
         ### Interpretation:
-        - Measures how much RMSE increases when a feature is randomized
-        - Higher values mean the feature is more critical to predictions
-        - Directly comparable to other models' importance metrics
+        - Shows average RMSE increase when features are randomized
+        - Higher values indicate more important features
+        - Directly comparable to other models' feature importance
         """)
         st.dataframe(importance_df)
         
